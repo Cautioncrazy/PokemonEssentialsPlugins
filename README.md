@@ -1,27 +1,24 @@
-Random Item and TM/HM Selectors
-
+README: Random Item and TM/HM Selectors
 This repository contains two custom Ruby script plugins for Pokémon Essentials v21.1, designed to simplify giving random items and TMs/HMs to players in your game.
 
 1. Plugin Overview
 A. Random Item Selector (File: Random Item Selector.rb)
-Allows you to give a truly random item from your items.txt database.
+Allows you to give a truly random item from your items.txt database. This plugin focuses on general items, excluding TMs/HMs, Poke Balls, Key Items, and similar specialized categories by default.
 
 Features:
 
-White-listing: Choose only from a specific list of items.
+White-listing: Choose only from a specific list of item IDs (e.g., [:POTION, :SUPERPOTION]).
 
-Black-listing: Exclude specific items from being chosen.
+Black-listing: Exclude specific item IDs from being chosen (e.g., [:MASTERBALL, :SACREDASH]).
 
-Flag-based exclusion: Exclude items with certain flags (e.g., exclude all Poke Balls, Key Items, or TMs/HMs). By default, it excludes TMs/HMs, Poke Balls, Key Items, Berries, Apricorns, Mail, and Type Gems.
+Flag-based exclusion: Exclude items that have certain "Flags" defined in items.txt. By default, the pbGiveRandomGeneralItem helper function excludes items with the following flags: [:TR, :HM, :PokeBall, :KeyItem, :Berry, :Apricorn, :Mail, :TypeGem]. You can customize these exclusions.
 
-Pocket-based inclusion: Restrict items to specific bag pockets.
+Pocket-based inclusion: Restrict the random selection to items found only in specific bag pockets (e.g., [1, 2, 7] for general, medicine, and battle items pockets).
 
-B. Random TM/HM Selector (File: 003_Random_TM_HM_Selector.rb)
+B. Random TM/HM Selector (File: Random HM-TM Selector.rb)
 Provides functions specifically for giving random Technical Machines (TMs) or Hidden Machines (HMs).
 
-TMs are identified by FieldUse = TR (internal value 5).
-
-HMs are identified by FieldUse = HM (internal value 4).
+Important: TMs are identified by FieldUse = TR (internal value 5) in items.txt. HMs are identified by FieldUse = HM (internal value 4) in items.txt.
 
 Features:
 
@@ -34,21 +31,21 @@ Type-specific selection: Choose only TMs, only HMs, or both.
 HM Duplication Prevention: Automatically tracks HMs given to the player via pbGiveRandomHM or pbGiveRandomTMorHM using a global variable $player_given_hms to prevent giving the same HM twice. TMs can be given multiple times as they are generally reusable.
 
 2. Installation
-These are standard Ruby script files that should be placed directly into your Pokemon Essentials project's Plugin Folder.
+These are standard Ruby script plugins that should be placed directly into your Pokémon Essentials project's Plugins folder.
 
 Steps:
 
-Open your Pokemon Essentials project folder.
+Navigate to your Pokémon Essentials project folder.
 
-Navigate to the Plugins folder.
+Locate the Plugins subfolder within your project.
 
-For Random Item Selector.rb:
+Drag and drop the Random Item Selector.rb file into the Plugins folder.
 
-Drop the Random Item Selector folder into the Plugin folder
+Drag and drop the Random HM-TM Selector.rb file into the Plugins folder.
 
-For Random TM-HM Selector.rb (This file):
+Launch your RPG Maker XP project. The plugins will be automatically loaded by Essentials.
 
-Drop the Random HM-TM Selector folder into the Plugin folder
+Save your RPG Maker XP project (File > Save).
 
 3. Usage in RPG Maker XP Events
 In any map event, you can use the "Script" command (found on Page 3 of the Event Commands) to call the functions provided by these plugins.
@@ -58,14 +55,29 @@ Call the helper function:
 
 pbGiveRandomGeneralItem
 
-This will automatically pick a random item based on default exclusions (no TMs/HMs, Poke Balls, Key Items, etc.) and pockets (1, 2, 7), and give it to the player with a message.
+This will automatically pick a random item based on its default exclusions (no TMs/HMs, Poke Balls, Key Items, etc.) and pockets (1, 2, 7), and give it to the player with a message. This is suitable for most common use cases.
 
-For more custom control (e.g., a specific whitelist or different exclusions for a particular event), you can call pbChooseRandomItem directly and then pbReceiveItem:
+For more custom control (e.g., a specific whitelist of items, or different exclusions for a particular event), you can call pbChooseRandomItem directly and then pbReceiveItem:
 
-chosen_item = pbChooseRandomItem(nil, [:POTION], [:KEYITEM], [1, 2])
-if chosen_item; pbReceiveItem(chosen_item); end
+# Example: Give a random Potion or Super Potion
+chosen_item = pbChooseRandomItem([:POTION, :SUPERPOTION])
+if chosen_item
+  pbReceiveItem(chosen_item)
+else
+  pbMessage(_INTL("No suitable item could be found."))
+end
 
-B. Giving a Random TM (using Random TM-HM Selector.rb)
+# Example: Give a random item from pocket 1, but exclude "REPEL"
+custom_exclusions = [:REPEL]
+custom_pockets = [1]
+chosen_item = pbChooseRandomItem(nil, custom_exclusions, nil, custom_pockets)
+if chosen_item
+  pbReceiveItem(chosen_item)
+else
+  pbMessage(_INTL("No suitable item could be found with custom rules."))
+end
+
+B. Giving a Random TM (using Random HM-TM Selector.rb)
 Call the helper function:
 
 pbGiveRandomTM
@@ -76,7 +88,7 @@ You can pass an optional blacklist:
 
 pbGiveRandomTM([:TM01, :TM02]) # Excludes TM01 and TM02
 
-C. Giving a Random HM (using Random TM-HM Selector.rb)
+C. Giving a Random HM (using Random HM-TM Selector.rb)
 Call the helper function:
 
 pbGiveRandomHM
@@ -89,7 +101,7 @@ You can pass an optional blacklist (in addition to owned HMs):
 
 pbGiveRandomHM([:HM01]) # Excludes HM01 (and any already owned)
 
-D. Giving a Random TM or HM (combined pool)
+D. Giving a Random TM or HM (combined pool, using Random HM-TM Selector.rb)
 Call the helper function:
 
 pbGiveRandomTMorHM
